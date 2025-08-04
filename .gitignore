@@ -40,3 +40,4 @@ htmlcov/
 # Others
 *.sqlite3
 *.db
+*.csv
