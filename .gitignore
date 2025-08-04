@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.env
+venv/
+env/
+.venv/
+.env/
+
+# Logs
+logs/
+*.log
+
+# Output folders
+cleaned_csv/processed/
+sql_scripts/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Python test output
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+
+# Others
+*.sqlite3
+*.db
