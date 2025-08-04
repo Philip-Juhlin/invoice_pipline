@@ -10,36 +10,56 @@ CLEANED_DIR = 'cleaned_csv'
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 os.makedirs(CLEANED_DIR, exist_ok=True)
 
+def is_file_locked(filepath):
+    if not os.path.exists(filepath):
+        return False
+    try:
+        with open(filepath, 'a'):
+            pass
+        return False
+    except IOError:
+        return True
+
 # Process all files in RAW_DIR
 for filename in os.listdir(RAW_DIR):
-    if filename.endswith('.csv'):
-        file_path = os.path.join(RAW_DIR, filename)
+    if not filename.endswith('.csv'):
+        continue
 
-        # Skip if it's a file already in 'processed'
-        if PROCESSED_DIR in file_path:
-            continue
+    file_path = os.path.join(RAW_DIR, filename)
 
-        print(f"Processing {filename}...")
+    # Skip files inside processed folder (in case)
+    if PROCESSED_DIR in file_path:
+        continue
 
-        # Read and clean data
-        df = pd.read_csv(file_path, sep=';', skiprows=1)
-        df.columns = df.columns.str.lower()
+    if is_file_locked(file_path):
+        print(f"Skipping locked file {filename}")
+        continue
 
-        df = df.dropna(subset=['fakt.nr'])
-        df['fakt.nr'] = df['fakt.nr'].astype(int).astype(str)
-        df = df[['ordernr', 'fakt.nr', 'benämning']]
+    print(f"Processing {filename}...")
 
-        # Filter SE-XX-XXXX patterns
-        filtered_df = df[df['benämning'].str.contains(r'^SE-\d{2}-\d{4}$', na=False)]
+    # Read and clean data
+    df = pd.read_csv(file_path, sep=';', skiprows=1)
+    df.columns = df.columns.str.lower()
 
-        # Save cleaned output
-        cleaned_filename = f"cleaned_{filename}"
-        cleaned_path = os.path.join(CLEANED_DIR, cleaned_filename)
-        filtered_df.to_csv(cleaned_path, sep=';', index=False)
-        print(f"Cleaned file written to {cleaned_path}")
+    df = df.dropna(subset=['fakt.nr'])
+    df['fakt.nr'] = df['fakt.nr'].astype(int).astype(str)
+    df = df[['ordernr', 'fakt.nr', 'benämning']]
+    df['benämning'] = df['benämning'].str.strip()
 
-        # Move processed file to 'processed' folder
-        shutil.move(file_path, os.path.join(PROCESSED_DIR, filename))
-        print(f"Moved {filename} to {PROCESSED_DIR}")
+    # Filter SE-XX-XXXX & SXXXXX patterns
+    df['benämning'] = df['benämning'].str.extract(r'^(SE-\d{2}-\d{4}|S\d{5})', expand=False)
+    filtered_df = df[df['benämning'].notnull()]
+
+
+    filtered_df = filtered_df.drop_duplicates(subset=['ordernr', 'fakt.nr', 'benämning'])
+    # Save cleaned output
+    cleaned_filename = f"cleaned_{filename}"
+    cleaned_path = os.path.join(CLEANED_DIR, cleaned_filename)
+    filtered_df.to_csv(cleaned_path, sep=';', index=False)
+    print(f"Cleaned file written to {cleaned_path}")
+
+    # Move processed file to 'processed' folder
+    shutil.move(file_path, os.path.join(PROCESSED_DIR, filename))
+    print(f"Moved {filename} to {PROCESSED_DIR}")
 
 print("All files processed.")

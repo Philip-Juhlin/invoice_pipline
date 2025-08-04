@@ -16,6 +16,7 @@ logs/
 
 # Output folders
 cleaned_csv/processed/
+raw_files/processed/
 sql_scripts/
 
 # OS generated files
